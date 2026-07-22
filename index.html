@@ -161,8 +161,8 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1">Upload Dokumen (JPG / PDF, Maks. 5MB)</label>
-                    <input type="file" id="addFileInput" accept=".jpg,.jpeg,.png,.pdf" class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 border border-slate-300 rounded-lg">
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Upload Dokumen (Dalam Pengembangan)</label>
+                    <input type="file" id="addFileInput" disabled accept=".jpg,.jpeg,.png,.pdf" class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 border border-slate-300 rounded-lg">
                 </div>
 
                 <div class="flex justify-end space-x-2 pt-3 border-t">
@@ -217,42 +217,52 @@
         </div>
     </div>
 
+    <!-- SCRIPT TERHUBUNG KE GOOGLE SHEETS -->
     <script>
-        // DATA INISIALISASI (Disimpan di LocalStorage Browser)
-        let initialData = [
-            { NoKlaim: "CLM/2026/001", NamaDealer: "PT DAM (Way Halim)", JenisProgram: "SCP", NominalKlaim: 2000000, TglKirimBerkas: "2026-07-20", TglDiterimaClaimMD: "2026-07-22", UploadDokumen: "", TglDiterimaPajak: "2026-07-22", TglDiterimaFinance: "2026-07-22", StatusTerakhir: "Diterima Finance", CatatanVerifikator: "" },
-            { NoKlaim: "CLM/2026/002", NamaDealer: "PT. Tunas Motor Pratama", JenisProgram: "DG & Voucher", NominalKlaim: 1500000, TglKirimBerkas: "2026-07-20", TglDiterimaClaimMD: "2026-07-23", UploadDokumen: "", TglDiterimaPajak: "2026-07-23", TglDiterimaFinance: "2026-07-23", StatusTerakhir: "Diterima Finance", CatatanVerifikator: "" },
-            { NoKlaim: "CLM/2026/003", NamaDealer: "PT. Bangun Centra Abadi", JenisProgram: "Voucher LCR", NominalKlaim: 1500000, TglKirimBerkas: "2026-07-20", TglDiterimaClaimMD: "2026-07-23", UploadDokumen: "", TglDiterimaPajak: "2026-07-23", TglDiterimaFinance: "2026-07-23", StatusTerakhir: "Diterima Tim Tax", CatatanVerifikator: "" },
-            { NoKlaim: "CLM/2026/004", NamaDealer: "Jaya Motor II", JenisProgram: "Pameran", NominalKlaim: 1500000, TglKirimBerkas: "2026-07-20", TglDiterimaClaimMD: "2026-07-23", UploadDokumen: "", TglDiterimaPajak: "2026-07-23", TglDiterimaFinance: "2026-07-24", StatusTerakhir: "Diterima Tim Tax", CatatanVerifikator: "" },
-            { NoKlaim: "CLM/2026/005", NamaDealer: "PT NSS (Kedaton)", JenisProgram: "Roadshow", NominalKlaim: 3360000, TglKirimBerkas: "2026-07-21", TglDiterimaClaimMD: "2026-07-23", UploadDokumen: "", TglDiterimaPajak: "", TglDiterimaFinance: "", StatusTerakhir: "Approved", CatatanVerifikator: "" },
-            { NoKlaim: "CLM/2026/006", NamaDealer: "Jaya Motor II", JenisProgram: "KPB (Reg dan XP)", NominalKlaim: 250000, TglKirimBerkas: "2026-07-21", TglDiterimaClaimMD: "2026-07-23", UploadDokumen: "", TglDiterimaPajak: "", TglDiterimaFinance: "", StatusTerakhir: "Approved", CatatanVerifikator: "" },
-            { NoKlaim: "CLM/2026/007", NamaDealer: "PT Trio Kencana Abadi", JenisProgram: "Pengembalian XP1", NominalKlaim: 3600000, TglKirimBerkas: "2026-07-21", TglDiterimaClaimMD: "2026-07-23", UploadDokumen: "", TglDiterimaPajak: "2026-07-23", TglDiterimaFinance: "2026-07-24", StatusTerakhir: "Diterima Finance", CatatanVerifikator: "" },
-            { NoKlaim: "CLM/2026/008", NamaDealer: "PT Astra International Tbk", JenisProgram: "SCP", NominalKlaim: 666000, TglKirimBerkas: "2026-07-21", TglDiterimaClaimMD: "2026-07-23", UploadDokumen: "", TglDiterimaPajak: "2026-07-23", TglDiterimaFinance: "", StatusTerakhir: "Diterima Tim Tax", CatatanVerifikator: "" },
-            { NoKlaim: "CLM/2026/009", NamaDealer: "Jaya Motor II", JenisProgram: "SCP", NominalKlaim: 550000, TglKirimBerkas: "2026-07-22", TglDiterimaClaimMD: "2026-07-24", UploadDokumen: "", TglDiterimaPajak: "", TglDiterimaFinance: "", StatusTerakhir: "Processing", CatatanVerifikator: "" },
-            { NoKlaim: "CLM/2026/010", NamaDealer: "CV Mitra Sehati Jaya", JenisProgram: "Voucher LCR", NominalKlaim: 160000, TglKirimBerkas: "2026-07-22", TglDiterimaClaimMD: "2026-07-24", UploadDokumen: "", TglDiterimaPajak: "", TglDiterimaFinance: "", StatusTerakhir: "Processing", CatatanVerifikator: "" },
-            { NoKlaim: "CLM/2026/011", NamaDealer: "CV Mitra Sehati Jaya", JenisProgram: "Pameran", NominalKlaim: 450000, TglKirimBerkas: "2026-07-22", TglDiterimaClaimMD: "2026-07-24", UploadDokumen: "", TglDiterimaPajak: "", TglDiterimaFinance: "", StatusTerakhir: "Revisi", CatatanVerifikator: "Nominal tidak sesuai" },
-            { NoKlaim: "CLM/2026/012", NamaDealer: "PT. Tunas Motor Pratama", JenisProgram: "Voucher LCR", NominalKlaim: 160000, TglKirimBerkas: "2026-07-22", TglDiterimaClaimMD: "2026-07-24", UploadDokumen: "", TglDiterimaPajak: "", TglDiterimaFinance: "", StatusTerakhir: "Revisi", CatatanVerifikator: "Dokumen buram" }
-        ];
-
+        const API_URL = "https://script.google.com/macros/s/AKfycbxFbC2sck1geSx56pjmsNGiHnsw2g_fT90sHmrPxBw-fuIfRBc3gCvWNyLjXO753hAf-A/exec";
+        
         let klaimData = [];
         let isAdmin = false;
 
-        // Ambil Data dari LocalStorage
-        function loadData() {
-            const stored = localStorage.getItem("klaim_dealer_data");
-            if (stored) {
-                klaimData = JSON.parse(stored);
-            } else {
-                klaimData = initialData;
-                saveData();
+        // FUNGSI MEMBACA DATA DARI GOOGLE SHEETS (GET)
+        async function loadData() {
+            const tbody = document.getElementById("tableBody");
+            tbody.innerHTML = `<tr><td colspan="12" class="text-center py-6 text-slate-500 font-semibold"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Sedang memuat data dari database...</td></tr>`;
+            
+            try {
+                const response = await fetch(API_URL);
+                const data = await response.json();
+                
+                // Menerjemahkan format dari Google Sheets agar sesuai persis dengan variabel rendering website Anda
+                klaimData = data.map(row => {
+                    const formatTanggal = (tgl) => {
+                        if(!tgl) return "";
+                        const d = new Date(tgl);
+                        return isNaN(d) ? tgl : d.toISOString().split('T')[0];
+                    };
+
+                    return {
+                        NoKlaim: row['No Klaim'] || "",
+                        NamaDealer: row['Nama Dealer'] || "",
+                        JenisProgram: row['Jenis Program'] || "",
+                        NominalKlaim: parseFloat(row['Nominal Klaim']) || 0,
+                        TglKirimBerkas: formatTanggal(row['Tgl Kirim']),
+                        TglDiterimaClaimMD: formatTanggal(row['Tgl Diterima MD']),
+                        UploadDokumen: row['Link Dokumen'] || "",
+                        TglDiterimaPajak: formatTanggal(row['Tgl Diterima Pajak']),
+                        TglDiterimaFinance: formatTanggal(row['Tgl Diterima Finance']),
+                        StatusTerakhir: row['Status'] || "Processing",
+                        CatatanVerifikator: row['Catatan'] || ""
+                    };
+                });
+                renderTable();
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                tbody.innerHTML = `<tr><td colspan="12" class="text-center py-6 text-rose-500 font-semibold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Gagal memuat data dari Google Sheets. Periksa koneksi internet Anda.</td></tr>`;
             }
-            renderTable();
         }
 
-        function saveData() {
-            localStorage.setItem("klaim_dealer_data", JSON.stringify(klaimData));
-        }
-
+        // TIDAK ADA PERUBAHAN PADA TAMPILAN ADMIN
         function toggleAdminLogin() {
             if(!isAdmin) {
                 const password = prompt("Masukkan Password Admin Verifikator:");
@@ -276,6 +286,7 @@
             renderTable();
         }
 
+        // RENDER TAMPILAN TABEL TETAP SAMA PERSIS
         function renderTable() {
             const tbody = document.getElementById("tableBody");
             const search = document.getElementById("searchInput").value.toLowerCase();
@@ -347,21 +358,12 @@
             document.getElementById("stat-revisi").innerText = cRev;
         }
 
-        // Helper Base64 String untuk Upload File Lokal
-        function getBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = error => reject(error);
-            });
-        }
-
-        // Form Handler Input Klaim Baru Dealer
+        // FUNGSI MEMBUKA MODAL KLAIM BARU TETAP SAMA
         function openModalTambahKlaim() {
             const today = new Date().toISOString().split('T')[0];
             const nextNum = klaimData.length + 1;
-            const autoNoKlaim = `CLM/2026/` + String(nextNum).padStart(3, '0');
+            const currentYear = new Date().getFullYear();
+            const autoNoKlaim = `CLM/${currentYear}/` + String(nextNum).padStart(3, '0');
 
             document.getElementById("addNoKlaim").value = autoNoKlaim;
             document.getElementById("addTglKirim").value = today;
@@ -378,51 +380,52 @@
             document.getElementById("modalTambahKlaim").classList.add("hidden");
         }
 
+        // FUNGSI MENGIRIM KLAIM KE GOOGLE SHEETS (POST)
         async function submitNewClaim(e) {
             e.preventDefault();
             const btn = document.getElementById("btnSubmitAdd");
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Menyimpan...`;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Menyimpan ke Database...`;
             btn.disabled = true;
 
-            const fileInput = document.getElementById("addFileInput");
-            let fileData = "";
+            // Membuat FormData khusus yang cocok persis dengan Header Google Sheets Anda
+            const form = new FormData();
+            form.append("No Klaim", document.getElementById("addNoKlaim").value);
+            form.append("Nama Dealer", document.getElementById("addDealer").value);
+            form.append("Jenis Program", document.getElementById("addProgram").value);
+            form.append("Nominal Klaim", document.getElementById("addNominal").value);
+            form.append("Tgl Kirim", document.getElementById("addTglKirim").value);
+            form.append("Tgl Diterima MD", document.getElementById("addTglMD").value);
+            form.append("Link Dokumen", "");
+            form.append("Tgl Diterima Pajak", "");
+            form.append("Tgl Diterima Finance", "");
+            form.append("Status", "Processing");
+            form.append("Catatan", "");
 
-            if (fileInput.files.length > 0) {
-                const file = fileInput.files[0];
-                if (file.size > 5 * 1024 * 1024) {
-                    alert("Ukuran file terlalu besar! Maksimal 5 MB.");
-                    btn.innerHTML = `Kirim Berkas Klaim`;
-                    btn.disabled = false;
-                    return;
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: form
+                });
+                
+                const result = await response.json();
+                
+                if (result.result === 'success') {
+                    alert("Pengajuan Klaim Berkas " + form.get("No Klaim") + " Berhasil Disimpan ke Google Sheets!");
+                    closeModalTambah();
+                    loadData(); // Load ulang data tabel dari sheet
+                } else {
+                    alert("Gagal menyimpan data ke database.");
                 }
-                fileData = await getBase64(file);
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Terjadi kesalahan koneksi internet saat menyimpan data.");
+            } finally {
+                btn.innerHTML = `Kirim Berkas Klaim`;
+                btn.disabled = false;
             }
-
-            const newClaim = {
-                NoKlaim: document.getElementById("addNoKlaim").value,
-                NamaDealer: document.getElementById("addDealer").value,
-                JenisProgram: document.getElementById("addProgram").value,
-                NominalKlaim: parseFloat(document.getElementById("addNominal").value) || 0,
-                TglKirimBerkas: document.getElementById("addTglKirim").value,
-                TglDiterimaClaimMD: document.getElementById("addTglMD").value,
-                UploadDokumen: fileData,
-                TglDiterimaPajak: "",
-                TglDiterimaFinance: "",
-                StatusTerakhir: "Processing",
-                CatatanVerifikator: ""
-            };
-
-            klaimData.push(newClaim);
-            saveData();
-
-            closeModalTambah();
-            renderTable();
-            alert("Pengajuan Klaim Berkas " + newClaim.NoKlaim + " Berhasil Terkirim!");
-            btn.innerHTML = `Kirim Berkas Klaim`;
-            btn.disabled = false;
         }
 
-        // Form Handler Verifikasi Admin
+        // FILTER, MODAL EDIT & VERIFIKASI
         function filterByStatus(st) {
             document.getElementById("statusFilter").value = st;
             renderTable();
@@ -455,6 +458,9 @@
 
         function saveVerification(e) {
             e.preventDefault();
+            // Catatan: Google Apps Script default (doPost) hanya bisa menambah baris baru, bukan Update (Edit).
+            // Fitur edit ini membutuhkan penyesuaian tambahan di Google Apps Script-nya nanti.
+            alert("Perhatian: Fitur EDIT/UPDATE Status belum terhubung ke Google Sheets (Masih menggunakan memori sementara browser).");
             
             const noKlaim = document.getElementById("modalNoKlaim").value;
             const newStatus = document.getElementById("modalStatus").value;
@@ -468,14 +474,12 @@
                 row.TglDiterimaPajak = tglPajak;
                 row.TglDiterimaFinance = tglFinance;
                 row.CatatanVerifikator = catatan;
-                saveData();
                 closeModal();
                 renderTable();
-                alert("Data Klaim " + noKlaim + " berhasil di-update!");
             }
         }
 
-        // FUNSI EXPORT EXCEL LENGKAP
+        // FUNGSI EXPORT EXCEL TETAP SAMA PERSIS
         function exportToExcel() {
             if(klaimData.length === 0) {
                 alert("Tidak ada data untuk di-export!");
@@ -524,6 +528,7 @@
             XLSX.writeFile(wb, "Report_Lengkap_Klaim_Dealer.xlsx");
         }
 
+        // Panggil data dari Sheet saat website dibuka
         document.addEventListener("DOMContentLoaded", loadData);
     </script>
 </body>
