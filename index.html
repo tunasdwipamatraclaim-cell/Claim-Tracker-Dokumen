@@ -29,11 +29,8 @@
             <button id="btnLoginAdmin" onclick="toggleAdminLogin()" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center shadow">
                 <i class="fa-solid fa-lock mr-1.5"></i> Login Admin
             </button>
-            <button onclick="fetchDataFromSheets()" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center shadow">
-                <i class="fa-solid fa-rotate mr-1.5" id="refreshIcon"></i> Refresh Data
-            </button>
-            <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center shadow">
-                <i class="fa-solid fa-file-excel mr-1.5"></i> Export Excel
+            <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-semibold transition flex items-center shadow">
+                <i class="fa-solid fa-file-excel mr-1.5"></i> Export Excel Lengkap
             </button>
         </div>
     </header>
@@ -107,18 +104,13 @@
                     </tr>
                 </thead>
                 <tbody id="tableBody" class="divide-y divide-slate-200">
-                    <tr>
-                        <td colspan="12" class="text-center py-8 text-slate-400">
-                            <i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i>
-                            <p>Memuat data dari Google Sheets...</p>
-                        </td>
-                    </tr>
+                    <!-- Data Rendered by JS -->
                 </tbody>
             </table>
         </div>
     </div>
 
-    <!-- 1. MODAL FORM TAMBAH KLAIM (DROPDOWN PROGRAM & UPLOAD FILE JPG/PDF) -->
+    <!-- 1. MODAL FORM TAMBAH KLAIM (USER/DEALER) -->
     <div id="modalTambahKlaim" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-lg p-6 space-y-4">
             <div class="flex justify-between items-center border-b pb-2">
@@ -171,7 +163,6 @@
                 <div>
                     <label class="block text-xs font-bold text-slate-600 mb-1">Upload Dokumen (JPG / PDF, Maks. 5MB)</label>
                     <input type="file" id="addFileInput" accept=".jpg,.jpeg,.png,.pdf" class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 border border-slate-300 rounded-lg">
-                    <p class="text-[10px] text-slate-400 mt-1">*File akan otomatis tersimpan di Google Drive.</p>
                 </div>
 
                 <div class="flex justify-end space-x-2 pt-3 border-t">
@@ -182,7 +173,7 @@
         </div>
     </div>
 
-    <!-- 2. MODAL FORM VERIFIKASI (KHUSUS ADMIN) -->
+    <!-- 2. MODAL FORM VERIFIKASI (ADMIN) -->
     <div id="modalVerifikasi" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
             <div class="flex justify-between items-center border-b pb-2">
@@ -227,11 +218,40 @@
     </div>
 
     <script>
-        // WEB APP URL SCRIPT YANG SUDAH DI-UPDATE:
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz-Z-I8ygp_Tu682EB89E1mzpTwPa09T-pTLHN0Ky-PeY7yZZDJsxw74cdE4hpL6nrn/exec";
+        // DATA INISIALISASI (Disimpan di LocalStorage Browser)
+        let initialData = [
+            { NoKlaim: "CLM/2026/001", NamaDealer: "PT DAM (Way Halim)", JenisProgram: "SCP", NominalKlaim: 2000000, TglKirimBerkas: "2026-07-20", TglDiterimaClaimMD: "2026-07-22", UploadDokumen: "", TglDiterimaPajak: "2026-07-22", TglDiterimaFinance: "2026-07-22", StatusTerakhir: "Diterima Finance", CatatanVerifikator: "" },
+            { NoKlaim: "CLM/2026/002", NamaDealer: "PT. Tunas Motor Pratama", JenisProgram: "DG & Voucher", NominalKlaim: 1500000, TglKirimBerkas: "2026-07-20", TglDiterimaClaimMD: "2026-07-23", UploadDokumen: "", TglDiterimaPajak: "2026-07-23", TglDiterimaFinance: "2026-07-23", StatusTerakhir: "Diterima Finance", CatatanVerifikator: "" },
+            { NoKlaim: "CLM/2026/003", NamaDealer: "PT. Bangun Centra Abadi", JenisProgram: "Voucher LCR", NominalKlaim: 1500000, TglKirimBerkas: "2026-07-20", TglDiterimaClaimMD: "2026-07-23", UploadDokumen: "", TglDiterimaPajak: "2026-07-23", TglDiterimaFinance: "2026-07-23", StatusTerakhir: "Diterima Tim Tax", CatatanVerifikator: "" },
+            { NoKlaim: "CLM/2026/004", NamaDealer: "Jaya Motor II", JenisProgram: "Pameran", NominalKlaim: 1500000, TglKirimBerkas: "2026-07-20", TglDiterimaClaimMD: "2026-07-23", UploadDokumen: "", TglDiterimaPajak: "2026-07-23", TglDiterimaFinance: "2026-07-24", StatusTerakhir: "Diterima Tim Tax", CatatanVerifikator: "" },
+            { NoKlaim: "CLM/2026/005", NamaDealer: "PT NSS (Kedaton)", JenisProgram: "Roadshow", NominalKlaim: 3360000, TglKirimBerkas: "2026-07-21", TglDiterimaClaimMD: "2026-07-23", UploadDokumen: "", TglDiterimaPajak: "", TglDiterimaFinance: "", StatusTerakhir: "Approved", CatatanVerifikator: "" },
+            { NoKlaim: "CLM/2026/006", NamaDealer: "Jaya Motor II", JenisProgram: "KPB (Reg dan XP)", NominalKlaim: 250000, TglKirimBerkas: "2026-07-21", TglDiterimaClaimMD: "2026-07-23", UploadDokumen: "", TglDiterimaPajak: "", TglDiterimaFinance: "", StatusTerakhir: "Approved", CatatanVerifikator: "" },
+            { NoKlaim: "CLM/2026/007", NamaDealer: "PT Trio Kencana Abadi", JenisProgram: "Pengembalian XP1", NominalKlaim: 3600000, TglKirimBerkas: "2026-07-21", TglDiterimaClaimMD: "2026-07-23", UploadDokumen: "", TglDiterimaPajak: "2026-07-23", TglDiterimaFinance: "2026-07-24", StatusTerakhir: "Diterima Finance", CatatanVerifikator: "" },
+            { NoKlaim: "CLM/2026/008", NamaDealer: "PT Astra International Tbk", JenisProgram: "SCP", NominalKlaim: 666000, TglKirimBerkas: "2026-07-21", TglDiterimaClaimMD: "2026-07-23", UploadDokumen: "", TglDiterimaPajak: "2026-07-23", TglDiterimaFinance: "", StatusTerakhir: "Diterima Tim Tax", CatatanVerifikator: "" },
+            { NoKlaim: "CLM/2026/009", NamaDealer: "Jaya Motor II", JenisProgram: "SCP", NominalKlaim: 550000, TglKirimBerkas: "2026-07-22", TglDiterimaClaimMD: "2026-07-24", UploadDokumen: "", TglDiterimaPajak: "", TglDiterimaFinance: "", StatusTerakhir: "Processing", CatatanVerifikator: "" },
+            { NoKlaim: "CLM/2026/010", NamaDealer: "CV Mitra Sehati Jaya", JenisProgram: "Voucher LCR", NominalKlaim: 160000, TglKirimBerkas: "2026-07-22", TglDiterimaClaimMD: "2026-07-24", UploadDokumen: "", TglDiterimaPajak: "", TglDiterimaFinance: "", StatusTerakhir: "Processing", CatatanVerifikator: "" },
+            { NoKlaim: "CLM/2026/011", NamaDealer: "CV Mitra Sehati Jaya", JenisProgram: "Pameran", NominalKlaim: 450000, TglKirimBerkas: "2026-07-22", TglDiterimaClaimMD: "2026-07-24", UploadDokumen: "", TglDiterimaPajak: "", TglDiterimaFinance: "", StatusTerakhir: "Revisi", CatatanVerifikator: "Nominal tidak sesuai" },
+            { NoKlaim: "CLM/2026/012", NamaDealer: "PT. Tunas Motor Pratama", JenisProgram: "Voucher LCR", NominalKlaim: 160000, TglKirimBerkas: "2026-07-22", TglDiterimaClaimMD: "2026-07-24", UploadDokumen: "", TglDiterimaPajak: "", TglDiterimaFinance: "", StatusTerakhir: "Revisi", CatatanVerifikator: "Dokumen buram" }
+        ];
 
         let klaimData = [];
         let isAdmin = false;
+
+        // Ambil Data dari LocalStorage
+        function loadData() {
+            const stored = localStorage.getItem("klaim_dealer_data");
+            if (stored) {
+                klaimData = JSON.parse(stored);
+            } else {
+                klaimData = initialData;
+                saveData();
+            }
+            renderTable();
+        }
+
+        function saveData() {
+            localStorage.setItem("klaim_dealer_data", JSON.stringify(klaimData));
+        }
 
         function toggleAdminLogin() {
             if(!isAdmin) {
@@ -254,22 +274,6 @@
                 document.getElementById("btnLoginAdmin").className = "bg-amber-600 hover:bg-amber-700 text-white px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center shadow";
             }
             renderTable();
-        }
-
-        async function fetchDataFromSheets() {
-            const refreshIcon = document.getElementById("refreshIcon");
-            if(refreshIcon) refreshIcon.classList.add("fa-spin");
-            
-            try {
-                const response = await fetch(SCRIPT_URL);
-                klaimData = await response.json();
-                renderTable();
-            } catch (error) {
-                alert("Gagal terhubung ke Google Sheets. Periksa kembali Web App URL Anda.");
-                console.error(error);
-            } finally {
-                if(refreshIcon) refreshIcon.classList.remove("fa-spin");
-            }
         }
 
         function renderTable() {
@@ -307,9 +311,10 @@
                     if(st === "Diterima Finance") badgeColor = "bg-emerald-100 text-emerald-800 border-emerald-300";
                     if(st === "Revisi") badgeColor = "bg-rose-200 text-rose-900 border-rose-300";
 
-                    let docLink = (row.UploadDokumen && row.UploadDokumen.startsWith("http")) 
-                        ? `<a href="${row.UploadDokumen}" target="_blank" class="text-indigo-600 hover:underline font-semibold"><i class="fa-solid fa-file-lines mr-1"></i>Lihat Dokumen</a>` 
-                        : '-';
+                    let docLink = '-';
+                    if (row.UploadDokumen) {
+                        docLink = `<a href="${row.UploadDokumen}" target="_blank" class="text-indigo-600 hover:underline font-semibold"><i class="fa-solid fa-file-lines mr-1"></i>Lihat Dokumen</a>`;
+                    }
 
                     let btnAksi = isAdmin 
                         ? `<button onclick="openModal('${row.NoKlaim}')" class="text-indigo-600 hover:text-indigo-800 font-semibold text-xs bg-indigo-50 px-2.5 py-1 rounded border border-indigo-200 hover:bg-indigo-100"><i class="fa-solid fa-pen-to-square"></i> Edit</button>`
@@ -342,7 +347,7 @@
             document.getElementById("stat-revisi").innerText = cRev;
         }
 
-        // Helper Base64 String untuk File Upload
+        // Helper Base64 String untuk Upload File Lokal
         function getBase64(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -376,11 +381,11 @@
         async function submitNewClaim(e) {
             e.preventDefault();
             const btn = document.getElementById("btnSubmitAdd");
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Mengupload & Mengirim...`;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Menyimpan...`;
             btn.disabled = true;
 
             const fileInput = document.getElementById("addFileInput");
-            let fileData = "", fileName = "";
+            let fileData = "";
 
             if (fileInput.files.length > 0) {
                 const file = fileInput.files[0];
@@ -390,38 +395,31 @@
                     btn.disabled = false;
                     return;
                 }
-                fileName = file.name;
                 fileData = await getBase64(file);
             }
 
-            const payload = {
-                action: "CREATE",
-                noKlaim: document.getElementById("addNoKlaim").value,
-                namaDealer: document.getElementById("addDealer").value,
-                jenisProgram: document.getElementById("addProgram").value,
-                nominalKlaim: document.getElementById("addNominal").value,
-                tglKirimBerkas: document.getElementById("addTglKirim").value,
-                tglDiterimaClaimMD: document.getElementById("addTglMD").value,
-                fileData: fileData,
-                fileName: fileName
+            const newClaim = {
+                NoKlaim: document.getElementById("addNoKlaim").value,
+                NamaDealer: document.getElementById("addDealer").value,
+                JenisProgram: document.getElementById("addProgram").value,
+                NominalKlaim: parseFloat(document.getElementById("addNominal").value) || 0,
+                TglKirimBerkas: document.getElementById("addTglKirim").value,
+                TglDiterimaClaimMD: document.getElementById("addTglMD").value,
+                UploadDokumen: fileData,
+                TglDiterimaPajak: "",
+                TglDiterimaFinance: "",
+                StatusTerakhir: "Processing",
+                CatatanVerifikator: ""
             };
 
-            try {
-                await fetch(SCRIPT_URL, {
-                    method: "POST",
-                    body: JSON.stringify(payload)
-                });
+            klaimData.push(newClaim);
+            saveData();
 
-                closeModalTambah();
-                await fetchDataFromSheets();
-                alert("Pengajuan Klaim Berkas " + payload.noKlaim + " Berhasil Terkirim!");
-            } catch (err) {
-                alert("Gagal mengirim klaim baru.");
-                console.error(err);
-            } finally {
-                btn.innerHTML = `Kirim Berkas Klaim`;
-                btn.disabled = false;
-            }
+            closeModalTambah();
+            renderTable();
+            alert("Pengajuan Klaim Berkas " + newClaim.NoKlaim + " Berhasil Terkirim!");
+            btn.innerHTML = `Kirim Berkas Klaim`;
+            btn.disabled = false;
         }
 
         // Form Handler Verifikasi Admin
@@ -455,46 +453,29 @@
             document.getElementById("groupFinDate").style.display = st === "Diterima Finance" ? "block" : "none";
         }
 
-        async function saveVerification(e) {
+        function saveVerification(e) {
             e.preventDefault();
             
-            const btnSubmit = document.getElementById("btnSubmit");
-            btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Menyimpan...`;
-            btnSubmit.disabled = true;
-
             const noKlaim = document.getElementById("modalNoKlaim").value;
             const newStatus = document.getElementById("modalStatus").value;
             const tglPajak = (newStatus === "Diterima Tim Tax" || newStatus === "Diterima Finance") ? document.getElementById("modalTaxDate").value : "";
             const tglFinance = (newStatus === "Diterima Finance") ? document.getElementById("modalFinDate").value : "";
             const catatan = document.getElementById("modalCatatan").value;
 
-            const payload = {
-                action: "UPDATE",
-                noKlaim: noKlaim,
-                status: newStatus,
-                tglPajak: tglPajak,
-                tglFinance: tglFinance,
-                catatan: catatan
-            };
-
-            try {
-                await fetch(SCRIPT_URL, {
-                    method: "POST",
-                    body: JSON.stringify(payload)
-                });
-
+            const row = klaimData.find(item => item.NoKlaim.toString() === noKlaim.toString());
+            if (row) {
+                row.StatusTerakhir = newStatus;
+                row.TglDiterimaPajak = tglPajak;
+                row.TglDiterimaFinance = tglFinance;
+                row.CatatanVerifikator = catatan;
+                saveData();
                 closeModal();
-                await fetchDataFromSheets();
+                renderTable();
                 alert("Data Klaim " + noKlaim + " berhasil di-update!");
-            } catch (err) {
-                alert("Gagal memperbarui data.");
-                console.error(err);
-            } finally {
-                btnSubmit.innerHTML = `Simpan Perubahan`;
-                btnSubmit.disabled = false;
             }
         }
 
+        // FUNSI EXPORT EXCEL LENGKAP
         function exportToExcel() {
             if(klaimData.length === 0) {
                 alert("Tidak ada data untuk di-export!");
@@ -508,7 +489,7 @@
                 "Nominal Klaim (Rp)": parseFloat(row.NominalKlaim) || 0,
                 "Tgl Kirim Berkas": row.TglKirimBerkas || "",
                 "Tgl Diterima Claim MD": row.TglDiterimaClaimMD || "",
-                "Link Dokumen": row.UploadDokumen || "",
+                "Link / Status Dokumen": row.UploadDokumen ? "Ada Dokumen" : "Tidak Ada",
                 "Tgl Diterima Pajak": row.TglDiterimaPajak || "",
                 "Tgl Diterima Finance": row.TglDiterimaFinance || "",
                 "Status Terakhir": row.StatusTerakhir || "Processing",
@@ -543,7 +524,7 @@
             XLSX.writeFile(wb, "Report_Lengkap_Klaim_Dealer.xlsx");
         }
 
-        document.addEventListener("DOMContentLoaded", fetchDataFromSheets);
+        document.addEventListener("DOMContentLoaded", loadData);
     </script>
 </body>
 </html>
