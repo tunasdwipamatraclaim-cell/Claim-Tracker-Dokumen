@@ -20,7 +20,11 @@
                 <p class="text-xs text-slate-300">Mode Akses: <span id="roleBadge" class="bg-amber-500 text-white px-2 py-0.5 rounded text-[10px] font-bold">USER / DEALER (VIEW ONLY)</span></p>
             </div>
         </div>
-        <div class="flex items-center space-x-2">
+        <div class="flex flex-wrap items-center gap-2">
+            <!-- Tombol Kirim Klaim Baru untuk Dealer -->
+            <button onclick="openModalTambahKlaim()" class="bg-teal-500 hover:bg-teal-600 text-white px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center shadow">
+                <i class="fa-solid fa-paper-plane mr-1.5"></i> + Kirim Klaim Baru
+            </button>
             <!-- Toggle Admin Mode -->
             <button id="btnLoginAdmin" onclick="toggleAdminLogin()" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center shadow">
                 <i class="fa-solid fa-lock mr-1.5"></i> Login Admin
@@ -29,7 +33,7 @@
                 <i class="fa-solid fa-rotate mr-1.5" id="refreshIcon"></i> Refresh Data
             </button>
             <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center shadow">
-                <i class="fa-solid fa-file-excel mr-1.5"></i> Export Excel Lengkap
+                <i class="fa-solid fa-file-excel mr-1.5"></i> Export Excel
             </button>
         </div>
     </header>
@@ -83,7 +87,7 @@
             </div>
         </div>
 
-        <!-- Main Data Table (11 Columns Layout) -->
+        <!-- Main Data Table -->
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
             <table class="w-full text-left text-xs border-collapse min-w-[1200px]">
                 <thead>
@@ -114,7 +118,71 @@
         </div>
     </div>
 
-    <!-- Modal Form Verifikasi (Khusus Admin) -->
+    <!-- 1. MODAL FORM TAMBAH KLAIM (DESAIN DROPDOWN PROGRAM & UPLOAD FILE JPG/PDF) -->
+    <div id="modalTambahKlaim" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-lg p-6 space-y-4">
+            <div class="flex justify-between items-center border-b pb-2">
+                <h3 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-paper-plane text-teal-600 mr-2"></i>Pengajuan Klaim Berkas Baru</h3>
+                <button onclick="closeModalTambah()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="formTambahKlaim" onsubmit="submitNewClaim(event)" class="space-y-3">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">No Klaim (Auto)</label>
+                        <input type="text" id="addNoKlaim" readonly class="w-full bg-slate-100 border border-slate-300 rounded-lg p-2 text-sm font-semibold text-slate-700">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">Nama Dealer</label>
+                        <input type="text" id="addDealer" required placeholder="Contoh: PT. Tunas Motor" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-teal-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">Jenis Program</label>
+                        <select id="addProgram" required class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-teal-500">
+                            <option value="" disabled selected>-- Pilih Jenis Program --</option>
+                            <option value="SCP">SCP</option>
+                            <option value="DG & Voucher">DG & Voucher</option>
+                            <option value="Voucher LCR">Voucher LCR</option>
+                            <option value="Pameran">Pameran</option>
+                            <option value="Roadshow">Roadshow</option>
+                            <option value="KPB (Reg dan XP)">KPB (Reg dan XP)</option>
+                            <option value="Pengembalian XP1">Pengembalian XP1</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">Nominal Klaim (Rp)</label>
+                        <input type="number" id="addNominal" required placeholder="1500000" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-teal-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">Tgl Kirim Berkas</label>
+                        <input type="date" id="addTglKirim" required class="w-full border border-slate-300 rounded-lg p-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">Tgl Diterima Claim MD</label>
+                        <input type="date" id="addTglMD" required class="w-full border border-slate-300 rounded-lg p-2 text-sm">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Upload Dokumen (JPG / PDF, Maks. 5MB)</label>
+                    <input type="file" id="addFileInput" accept=".jpg,.jpeg,.png,.pdf" class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 border border-slate-300 rounded-lg">
+                    <p class="text-[10px] text-slate-400 mt-1">*File akan otomatis tersimpan di Google Drive.</p>
+                </div>
+
+                <div class="flex justify-end space-x-2 pt-3 border-t">
+                    <button type="button" onclick="closeModalTambah()" class="px-4 py-2 bg-slate-200 text-slate-700 text-sm font-semibold rounded-lg hover:bg-slate-300">Batal</button>
+                    <button type="submit" id="btnSubmitAdd" class="px-4 py-2 bg-teal-600 text-white text-sm font-semibold rounded-lg hover:bg-teal-700">Kirim Berkas Klaim</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. MODAL FORM VERIFIKASI (KHUSUS ADMIN) -->
     <div id="modalVerifikasi" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
             <div class="flex justify-between items-center border-b pb-2">
@@ -159,13 +227,12 @@
     </div>
 
     <script>
-        // WEB APP URL GOOGLE APPS SCRIPT:
+        // WEB APP URL GOOGLE APPS SCRIPT
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz-Z-I8ygp_Tu682EB89E1mzpTwPa09T-pTLHN0Ky-PeY7yZZDJsxw74cdE4hpL6nrn/exec";
 
         let klaimData = [];
-        let isAdmin = false; // Default: Dealer / User Mode (Read-Only)
+        let isAdmin = false;
 
-        // Login Admin sederhana (Password: admin123)
         function toggleAdminLogin() {
             if(!isAdmin) {
                 const password = prompt("Masukkan Password Admin Verifikator:");
@@ -240,9 +307,10 @@
                     if(st === "Diterima Finance") badgeColor = "bg-emerald-100 text-emerald-800 border-emerald-300";
                     if(st === "Revisi") badgeColor = "bg-rose-200 text-rose-900 border-rose-300";
 
-                    let docLink = row.UploadDokumen ? `<a href="${row.UploadDokumen}" target="_blank" class="text-indigo-600 hover:underline"><i class="fa-solid fa-file-lines mr-1"></i>Lihat</a>` : '-';
+                    let docLink = (row.UploadDokumen && row.UploadDokumen.startsWith("http")) 
+                        ? `<a href="${row.UploadDokumen}" target="_blank" class="text-indigo-600 hover:underline font-semibold"><i class="fa-solid fa-file-lines mr-1"></i>Lihat Dokumen</a>` 
+                        : '-';
 
-                    // Tombol Edit hanya aktif jika Admin
                     let btnAksi = isAdmin 
                         ? `<button onclick="openModal('${row.NoKlaim}')" class="text-indigo-600 hover:text-indigo-800 font-semibold text-xs bg-indigo-50 px-2.5 py-1 rounded border border-indigo-200 hover:bg-indigo-100"><i class="fa-solid fa-pen-to-square"></i> Edit</button>`
                         : `<span class="text-slate-400 text-[10px] italic"><i class="fa-solid fa-eye mr-1"></i>View Only</span>`;
@@ -251,7 +319,7 @@
                         <tr class="hover:bg-slate-50 transition border-b">
                             <td class="p-3 font-semibold text-slate-900 border-r">${row.NoKlaim || '-'}</td>
                             <td class="p-3 border-r">${row.NamaDealer || '-'}</td>
-                            <td class="p-3 border-r">${row.JenisProgram || '-'}</td>
+                            <td class="p-3 border-r font-medium text-slate-700">${row.JenisProgram || '-'}</td>
                             <td class="p-3 border-r text-right font-medium">Rp ${nominal.toLocaleString('id-ID')}</td>
                             <td class="p-3 border-r text-center text-slate-600">${row.TglKirimBerkas || '-'}</td>
                             <td class="p-3 border-r text-center text-slate-600">${row.TglDiterimaClaimMD || '-'}</td>
@@ -274,6 +342,89 @@
             document.getElementById("stat-revisi").innerText = cRev;
         }
 
+        // Helper Base64 String untuk File Upload
+        function getBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        // Form Handler Input Klaim Baru Dealer
+        function openModalTambahKlaim() {
+            const today = new Date().toISOString().split('T')[0];
+            const nextNum = klaimData.length + 1;
+            const autoNoKlaim = `CLM/2026/` + String(nextNum).padStart(3, '0');
+
+            document.getElementById("addNoKlaim").value = autoNoKlaim;
+            document.getElementById("addTglKirim").value = today;
+            document.getElementById("addTglMD").value = today;
+            document.getElementById("addDealer").value = "";
+            document.getElementById("addProgram").value = "";
+            document.getElementById("addNominal").value = "";
+            document.getElementById("addFileInput").value = "";
+
+            document.getElementById("modalTambahKlaim").classList.remove("hidden");
+        }
+
+        function closeModalTambah() {
+            document.getElementById("modalTambahKlaim").classList.add("hidden");
+        }
+
+        async function submitNewClaim(e) {
+            e.preventDefault();
+            const btn = document.getElementById("btnSubmitAdd");
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Mengupload & Mengirim...`;
+            btn.disabled = true;
+
+            const fileInput = document.getElementById("addFileInput");
+            let fileData = "", fileName = "";
+
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                if (file.size > 5 * 1024 * 1024) {
+                    alert("Ukuran file terlalu besar! Maksimal 5 MB.");
+                    btn.innerHTML = `Kirim Berkas Klaim`;
+                    btn.disabled = false;
+                    return;
+                }
+                fileName = file.name;
+                fileData = await getBase64(file);
+            }
+
+            const payload = {
+                action: "CREATE",
+                noKlaim: document.getElementById("addNoKlaim").value,
+                namaDealer: document.getElementById("addDealer").value,
+                jenisProgram: document.getElementById("addProgram").value,
+                nominalKlaim: document.getElementById("addNominal").value,
+                tglKirimBerkas: document.getElementById("addTglKirim").value,
+                tglDiterimaClaimMD: document.getElementById("addTglMD").value,
+                fileData: fileData,
+                fileName: fileName
+            };
+
+            try {
+                await fetch(SCRIPT_URL, {
+                    method: "POST",
+                    body: JSON.stringify(payload)
+                });
+
+                closeModalTambah();
+                await fetchDataFromSheets();
+                alert("Pengajuan Klaim Berkas " + payload.noKlaim + " Berhasil Terkirim!");
+            } catch (err) {
+                alert("Gagal mengirim klaim baru.");
+                console.error(err);
+            } finally {
+                btn.innerHTML = `Kirim Berkas Klaim`;
+                btn.disabled = false;
+            }
+        }
+
+        // Form Handler Verifikasi Admin
         function filterByStatus(st) {
             document.getElementById("statusFilter").value = st;
             renderTable();
@@ -318,6 +469,7 @@
             const catatan = document.getElementById("modalCatatan").value;
 
             const payload = {
+                action: "UPDATE",
                 noKlaim: noKlaim,
                 status: newStatus,
                 tglPajak: tglPajak,
@@ -343,14 +495,12 @@
             }
         }
 
-        // EXPORT EXCEL LENGKAP DETAIL DENGAN TANGGAL FINANCE & RINGKASAN REKAP
         function exportToExcel() {
             if(klaimData.length === 0) {
                 alert("Tidak ada data untuk di-export!");
                 return;
             }
 
-            // 1. Format Data Detail Tracking Lengkap
             const detailExport = klaimData.map(row => ({
                 "No Klaim": row.NoKlaim || "",
                 "Nama Dealer": row.NamaDealer || "",
@@ -365,7 +515,6 @@
                 "Catatan Verifikator": row.CatatanVerifikator || ""
             }));
 
-            // 2. Format Data Ringkasan Statistik
             let totalKlaim = klaimData.length;
             let totalNominal = detailExport.reduce((acc, curr) => acc + curr["Nominal Klaim (Rp)"], 0);
             let nominalFinance = detailExport
@@ -384,7 +533,6 @@
                 { "Kategori Statistik": "TOTAL NOMINAL DITERIMA FINANCE (Rp)", "Jumlah / Nominal": nominalFinance }
             ];
 
-            // 3. Buat Workbook Multi-Sheet
             const wb = XLSX.utils.book_new();
             const wsDetail = XLSX.utils.json_to_sheet(detailExport);
             const wsSummary = XLSX.utils.json_to_sheet(summaryExport);
@@ -392,7 +540,6 @@
             XLSX.utils.book_append_sheet(wb, wsDetail, "Detail Tracking");
             XLSX.utils.book_append_sheet(wb, wsSummary, "Ringkasan Stat");
 
-            // Save File Excel
             XLSX.writeFile(wb, "Report_Lengkap_Klaim_Dealer.xlsx");
         }
 
