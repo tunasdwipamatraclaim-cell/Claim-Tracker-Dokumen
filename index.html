@@ -140,7 +140,6 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-bold text-slate-600 mb-1">Jenis Program</label>
-                        <!-- DROPDOWN PILIHAN JENIS PROGRAM -->
                         <select id="addProgram" required class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-teal-500">
                             <option value="" disabled selected>-- Pilih Jenis Program --</option>
                             <option value="SCP">SCP</option>
@@ -169,7 +168,6 @@
                     </div>
                 </div>
 
-                <!-- INPUT UPLOAD FILE JPG/PDF -->
                 <div>
                     <label class="block text-xs font-bold text-slate-600 mb-1">Upload Dokumen (JPG / PDF, Maks. 5MB)</label>
                     <input type="file" id="addFileInput" accept=".jpg,.jpeg,.png,.pdf" class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 border border-slate-300 rounded-lg">
@@ -229,6 +227,7 @@
     </div>
 
     <script>
+        // WEB APP URL GOOGLE APPS SCRIPT
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz-Z-I8ygp_Tu682EB89E1mzpTwPa09T-pTLHN0Ky-PeY7yZZDJsxw74cdE4hpL6nrn/exec";
 
         let klaimData = [];
@@ -343,7 +342,7 @@
             document.getElementById("stat-revisi").innerText = cRev;
         }
 
-        // Helper Konversi File ke Base64 String
+        // Helper Base64 String untuk File Upload
         function getBase64(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
