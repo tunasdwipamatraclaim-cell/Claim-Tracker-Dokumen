@@ -1,3 +1,8 @@
+Berikut adalah kode lengkap file **`index.html`** yang sudah diperbaiki secara menyeluruh.
+
+Pada versi ini, fungsi penghitungan status di dashboard dibuat jauh lebih presisi agar langsung mencocokkan setiap variasi teks status yang dikirimkan dari Google Sheets secara real-time.
+
+```html
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -262,6 +267,9 @@
             try {
                 const response = await fetch(SCRIPT_URL);
                 klaimData = await response.json();
+                
+                // Langsung update dashboard dan tabel seketika data diterima
+                updateDashboardSummary(klaimData);
                 renderTable();
             } catch (error) {
                 alert("Gagal terhubung ke Google Sheets. Periksa kembali Web App URL Anda.");
@@ -271,20 +279,29 @@
             }
         }
 
-        // Fungsi khusus untuk memperbarui kartu statistik dashboard secara otomatis
+        // Fungsi terpusat untuk memperbarui kartu statistik dashboard secara akurat & real-time
         function updateDashboardSummary(data) {
             let cProc = 0, cApp = 0, cTax = 0, cFin = 0, cRev = 0;
 
-            data.forEach(row => {
-                const st = (row.StatusTerakhir || "Processing").trim();
-                if(st === "Processing") cProc++;
-                else if(st === "Approved") cApp++;
-                else if(st === "Diterima Tim Tax") cTax++;
-                else if(st === "Diterima Finance") cFin++;
-                else if(st === "Revisi") cRev++;
-            });
+            if (data && data.length > 0) {
+                data.forEach(row => {
+                    const st = (row.StatusTerakhir || "Processing").toString().trim().toLowerCase();
 
-            document.getElementById("stat-total").innerText = data.length;
+                    if (st.includes("processing")) {
+                        cProc++;
+                    } else if (st.includes("approved")) {
+                        cApp++;
+                    } else if (st.includes("tax") || st.includes("pajak")) {
+                        cTax++;
+                    } else if (st.includes("finance")) {
+                        cFin++;
+                    } else if (st.includes("revisi")) {
+                        cRev++;
+                    }
+                });
+            }
+
+            document.getElementById("stat-total").innerText = data ? data.length : 0;
             document.getElementById("stat-processing").innerText = cProc;
             document.getElementById("stat-approved").innerText = cApp;
             document.getElementById("stat-tax").innerText = cTax;
@@ -304,7 +321,7 @@
                 return;
             }
 
-            // Perbarui perhitungan kartu dashboard setiap kali render tabel dipanggil
+            // Pastikan dashboard selalu di-update saat render
             updateDashboardSummary(klaimData);
 
             klaimData.forEach(row => {
@@ -314,14 +331,14 @@
                 const matchesSearch = (row.NamaDealer || "").toLowerCase().includes(search) || 
                                       (row.JenisProgram || "").toLowerCase().includes(search) || 
                                       (row.NoKlaim || "").toLowerCase().includes(search);
-                const matchesFilter = filter === "ALL" || st === filter;
+                const matchesFilter = filter === "ALL" || st.trim().toLowerCase() === filter.trim().toLowerCase();
 
                 if(matchesSearch && matchesFilter) {
                     let badgeColor = "bg-orange-100 text-orange-800 border-orange-300"; 
-                    if(st === "Approved") badgeColor = "bg-amber-100 text-amber-800 border-amber-300";
-                    if(st === "Diterima Tim Tax") badgeColor = "bg-sky-100 text-sky-800 border-sky-300";
-                    if(st === "Diterima Finance") badgeColor = "bg-emerald-100 text-emerald-800 border-emerald-300";
-                    if(st === "Revisi") badgeColor = "bg-rose-200 text-rose-900 border-rose-300";
+                    if(st.toLowerCase().includes("approved")) badgeColor = "bg-amber-100 text-amber-800 border-amber-300";
+                    if(st.toLowerCase().includes("tax") || st.toLowerCase().includes("pajak")) badgeColor = "bg-sky-100 text-sky-800 border-sky-300";
+                    if(st.toLowerCase().includes("finance")) badgeColor = "bg-emerald-100 text-emerald-800 border-emerald-300";
+                    if(st.toLowerCase().includes("revisi")) badgeColor = "bg-rose-200 text-rose-900 border-rose-300";
 
                     let docLink = (row.UploadDokumen && row.UploadDokumen.startsWith("http")) 
                         ? `<a href="${row.UploadDokumen}" target="_blank" class="text-indigo-600 hover:underline font-semibold"><i class="fa-solid fa-file-lines mr-1"></i>Lihat Dokumen</a>` 
@@ -565,3 +582,5 @@
     </script>
 </body>
 </html>
+
+```
