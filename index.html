@@ -118,7 +118,7 @@
         </div>
     </div>
 
-    <!-- 1. MODAL FORM TAMBAH KLAIM -->
+    <!-- MODAL FORM TAMBAH KLAIM -->
     <div id="modalTambahKlaim" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-lg p-6 space-y-4">
             <div class="flex justify-between items-center border-b pb-2">
@@ -182,7 +182,7 @@
         </div>
     </div>
 
-    <!-- 2. MODAL FORM VERIFIKASI -->
+    <!-- MODAL FORM VERIFIKASI -->
     <div id="modalVerifikasi" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
             <div class="flex justify-between items-center border-b pb-2">
@@ -261,9 +261,32 @@
             
             try {
                 const response = await fetch(SCRIPT_URL);
-                klaimData = await response.json();
+                const rawData = await response.json();
                 
-                // Langsung update dashboard dan tabel seketika data diterima
+                // Normalisasi objek untuk memastikan seluruh kolom terbaca sempurna dari Sheet
+                klaimData = rawData.map(row => {
+                    const norm = {};
+                    for (let key in row) {
+                        let cleanKey = key.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
+                        norm[cleanKey] = row[key];
+                    }
+
+                    return {
+                        NoKlaim: row.NoKlaim || row['No Klaim'] || norm['noklaim'] || '-',
+                        NamaDealer: row.NamaDealer || row['Nama Dealer'] || norm['namadealer'] || '-',
+                        JenisProgram: row.JenisProgram || row['Jenis Program'] || norm['jenisprogram'] || '-',
+                        NominalKlaim: row.NominalKlaim || row['Nominal Klaim (Rp)'] || row['Nominal Klaim'] || norm['nominalklaim'] || 0,
+                        TglKirimBerkas: row.TglKirimBerkas || row['Tgl Kirim Berkas'] || norm['tglkirimberkas'] || '-',
+                        TglDiterimaClaimMD: row.TglDiterimaClaimMD || row['Tgl Diterima Claim MD'] || norm['tglditerimaclaimmd'] || '-',
+                        UploadDokumen: row.UploadDokumen || row['Dokumen'] || row['Upload Dokumen'] || norm['uploaddokumen'] || norm['dokumen'] || '-',
+                        TglDiterimaPajak: row.TglDiterimaPajak || row['Tgl Diterima Pajak'] || norm['tglditerimapajak'] || '-',
+                        TglDiterimaFinance: row.TglDiterimaFinance || row['Tgl Diterima Finance'] || norm['tglditerimafinance'] || '-',
+                        StatusTerakhir: row.StatusTerakhir || row['Status Terakhir'] || norm['statusterakhir'] || 'Processing',
+                        CatatanVerifikator: row.CatatanVerifikator || row['Catatan Verifikator'] || norm['catatanverifikator'] || '-'
+                    };
+                });
+                
+                // Update statistik kartu di bagian atas secara real-time[cite: 1, 2]
                 updateDashboardSummary(klaimData);
                 renderTable();
             } catch (error) {
@@ -274,7 +297,6 @@
             }
         }
 
-        // Fungsi terpusat untuk memperbarui kartu statistik dashboard secara akurat & real-time
         function updateDashboardSummary(data) {
             let cProc = 0, cApp = 0, cTax = 0, cFin = 0, cRev = 0;
 
@@ -316,7 +338,6 @@
                 return;
             }
 
-            // Pastikan dashboard selalu di-update saat render
             updateDashboardSummary(klaimData);
 
             klaimData.forEach(row => {
@@ -326,6 +347,7 @@
                 const matchesSearch = (row.NamaDealer || "").toLowerCase().includes(search) || 
                                       (row.JenisProgram || "").toLowerCase().includes(search) || 
                                       (row.NoKlaim || "").toLowerCase().includes(search);
+                
                 const matchesFilter = filter === "ALL" || st.trim().toLowerCase() === filter.trim().toLowerCase();
 
                 if(matchesSearch && matchesFilter) {
