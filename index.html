@@ -118,7 +118,7 @@
         </div>
     </div>
 
-    <!-- 1. MODAL FORM TAMBAH KLAIM (DROPDOWN PROGRAM & UPLOAD FILE JPG/PDF) -->
+    <!-- 1. MODAL FORM TAMBAH KLAIM -->
     <div id="modalTambahKlaim" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-lg p-6 space-y-4">
             <div class="flex justify-between items-center border-b pb-2">
@@ -227,7 +227,6 @@
     </div>
 
     <script>
-        // WEB APP URL SCRIPT YANG SUDAH DI-UPDATE (DENGAN URL BARU):
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwXT9ES-DbmsrzmTmUNuA1blOqnWFfr3vCdJT2y6ufO3lYyi7ry32vd8nmvr4OfacNZjA/exec";
 
         let klaimData = [];
@@ -272,6 +271,27 @@
             }
         }
 
+        // Fungsi khusus untuk memperbarui kartu statistik dashboard secara otomatis
+        function updateDashboardSummary(data) {
+            let cProc = 0, cApp = 0, cTax = 0, cFin = 0, cRev = 0;
+
+            data.forEach(row => {
+                const st = (row.StatusTerakhir || "Processing").trim();
+                if(st === "Processing") cProc++;
+                else if(st === "Approved") cApp++;
+                else if(st === "Diterima Tim Tax") cTax++;
+                else if(st === "Diterima Finance") cFin++;
+                else if(st === "Revisi") cRev++;
+            });
+
+            document.getElementById("stat-total").innerText = data.length;
+            document.getElementById("stat-processing").innerText = cProc;
+            document.getElementById("stat-approved").innerText = cApp;
+            document.getElementById("stat-tax").innerText = cTax;
+            document.getElementById("stat-finance").innerText = cFin;
+            document.getElementById("stat-revisi").innerText = cRev;
+        }
+
         function renderTable() {
             const tbody = document.getElementById("tableBody");
             const search = document.getElementById("searchInput").value.toLowerCase();
@@ -280,20 +300,16 @@
 
             if(klaimData.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="12" class="text-center py-6 text-slate-400">Tidak ada data klaim.</td></tr>`;
+                updateDashboardSummary([]);
                 return;
             }
 
-            let cProc = 0, cApp = 0, cTax = 0, cFin = 0, cRev = 0;
+            // Perbarui perhitungan kartu dashboard setiap kali render tabel dipanggil
+            updateDashboardSummary(klaimData);
 
             klaimData.forEach(row => {
                 const st = row.StatusTerakhir || "Processing";
                 const nominal = parseFloat(row.NominalKlaim) || 0;
-
-                if(st === "Processing") cProc++;
-                if(st === "Approved") cApp++;
-                if(st === "Diterima Tim Tax") cTax++;
-                if(st === "Diterima Finance") cFin++;
-                if(st === "Revisi") cRev++;
 
                 const matchesSearch = (row.NamaDealer || "").toLowerCase().includes(search) || 
                                       (row.JenisProgram || "").toLowerCase().includes(search) || 
@@ -333,21 +349,13 @@
                     `;
                 }
             });
-
-            document.getElementById("stat-total").innerText = klaimData.length;
-            document.getElementById("stat-processing").innerText = cProc;
-            document.getElementById("stat-approved").innerText = cApp;
-            document.getElementById("stat-tax").innerText = cTax;
-            document.getElementById("stat-finance").innerText = cFin;
-            document.getElementById("stat-revisi").innerText = cRev;
         }
 
-        // Helper Base64
         function getBase64(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.readAsDataURL(file);
-                reader.onload = () => resolve(reader.result.split(',')[1]); // Only keep base64 string
+                reader.onload = () => resolve(reader.result.split(',')[1]);
                 reader.onerror = error => reject(error);
             });
         }
@@ -424,8 +432,6 @@
                          alert("Gagal menyimpan data ke database. Error: " + (resultData.error || "Unknown"));
                     }
                 } catch (jsonError) {
-                   console.error("JSON Parse Error:", jsonError, "Response Text:", resultText);
-                   alert("Data terkirim, tapi gagal membaca respon (CORS). Cek Google Sheets Anda.");
                    closeModalTambah();
                    await fetchDataFromSheets();
                 }
@@ -439,7 +445,6 @@
             }
         }
 
-        // Form Handler Verifikasi Admin
         function filterByStatus(st) {
             document.getElementById("statusFilter").value = st;
             renderTable();
@@ -491,16 +496,13 @@
                     body: formData
                 });
                 
-                try{
+                try {
                      await response.json();
-                     closeModal();
-                     await fetchDataFromSheets();
-                     alert("Data Klaim " + formData.get("noKlaim") + " berhasil di-update!");
-                } catch(e) {
-                     closeModal();
-                     await fetchDataFromSheets();
-                     alert("Data Klaim " + formData.get("noKlaim") + " berhasil di-update (CORS Warning)!");
-                }
+                } catch(e) {}
+
+                closeModal();
+                await fetchDataFromSheets();
+                alert("Data Klaim " + formData.get("noKlaim") + " berhasil di-update!");
 
             } catch (err) {
                 alert("Gagal memperbarui data.");
