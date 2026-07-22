@@ -118,7 +118,7 @@
         </div>
     </div>
 
-    <!-- 1. MODAL FORM TAMBAH KLAIM (KHUSUS DEALER / USER) -->
+    <!-- 1. MODAL FORM TAMBAH KLAIM (DESAIN DROPDOWN PROGRAM & UPLOAD FILE JPG/PDF) -->
     <div id="modalTambahKlaim" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-lg p-6 space-y-4">
             <div class="flex justify-between items-center border-b pb-2">
@@ -140,7 +140,17 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-bold text-slate-600 mb-1">Jenis Program</label>
-                        <input type="text" id="addProgram" required placeholder="Contoh: SCP / DP Hemat" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-teal-500">
+                        <!-- DROPDOWN PILIHAN JENIS PROGRAM -->
+                        <select id="addProgram" required class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-teal-500">
+                            <option value="" disabled selected>-- Pilih Jenis Program --</option>
+                            <option value="SCP">SCP</option>
+                            <option value="DG & Voucher">DG & Voucher</option>
+                            <option value="Voucher LCR">Voucher LCR</option>
+                            <option value="Pameran">Pameran</option>
+                            <option value="Roadshow">Roadshow</option>
+                            <option value="KPB (Reg dan XP)">KPB (Reg dan XP)</option>
+                            <option value="Pengembalian XP1">Pengembalian XP1</option>
+                        </select>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-600 mb-1">Nominal Klaim (Rp)</label>
@@ -159,9 +169,11 @@
                     </div>
                 </div>
 
+                <!-- INPUT UPLOAD FILE JPG/PDF -->
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1">Link Upload Dokumen (Google Drive / Cloud Link)</label>
-                    <input type="url" id="addDokumen" placeholder="https://drive.google.com/file/..." class="w-full border border-slate-300 rounded-lg p-2 text-sm">
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Upload Dokumen (JPG / PDF, Maks. 5MB)</label>
+                    <input type="file" id="addFileInput" accept=".jpg,.jpeg,.png,.pdf" class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 border border-slate-300 rounded-lg">
+                    <p class="text-[10px] text-slate-400 mt-1">*File akan otomatis tersimpan di Google Drive.</p>
                 </div>
 
                 <div class="flex justify-end space-x-2 pt-3 border-t">
@@ -296,7 +308,9 @@
                     if(st === "Diterima Finance") badgeColor = "bg-emerald-100 text-emerald-800 border-emerald-300";
                     if(st === "Revisi") badgeColor = "bg-rose-200 text-rose-900 border-rose-300";
 
-                    let docLink = row.UploadDokumen ? `<a href="${row.UploadDokumen}" target="_blank" class="text-indigo-600 hover:underline"><i class="fa-solid fa-file-lines mr-1"></i>Lihat</a>` : '-';
+                    let docLink = (row.UploadDokumen && row.UploadDokumen.startsWith("http")) 
+                        ? `<a href="${row.UploadDokumen}" target="_blank" class="text-indigo-600 hover:underline font-semibold"><i class="fa-solid fa-file-lines mr-1"></i>Lihat Dokumen</a>` 
+                        : '-';
 
                     let btnAksi = isAdmin 
                         ? `<button onclick="openModal('${row.NoKlaim}')" class="text-indigo-600 hover:text-indigo-800 font-semibold text-xs bg-indigo-50 px-2.5 py-1 rounded border border-indigo-200 hover:bg-indigo-100"><i class="fa-solid fa-pen-to-square"></i> Edit</button>`
@@ -306,7 +320,7 @@
                         <tr class="hover:bg-slate-50 transition border-b">
                             <td class="p-3 font-semibold text-slate-900 border-r">${row.NoKlaim || '-'}</td>
                             <td class="p-3 border-r">${row.NamaDealer || '-'}</td>
-                            <td class="p-3 border-r">${row.JenisProgram || '-'}</td>
+                            <td class="p-3 border-r font-medium text-slate-700">${row.JenisProgram || '-'}</td>
                             <td class="p-3 border-r text-right font-medium">Rp ${nominal.toLocaleString('id-ID')}</td>
                             <td class="p-3 border-r text-center text-slate-600">${row.TglKirimBerkas || '-'}</td>
                             <td class="p-3 border-r text-center text-slate-600">${row.TglDiterimaClaimMD || '-'}</td>
@@ -329,9 +343,17 @@
             document.getElementById("stat-revisi").innerText = cRev;
         }
 
-        // =====================================
-        // LOGIKA INPUT KLAIM BARU DEALER
-        // =====================================
+        // Helper Konversi File ke Base64 String
+        function getBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        // Form Handler Input Klaim Baru Dealer
         function openModalTambahKlaim() {
             const today = new Date().toISOString().split('T')[0];
             const nextNum = klaimData.length + 1;
@@ -343,7 +365,7 @@
             document.getElementById("addDealer").value = "";
             document.getElementById("addProgram").value = "";
             document.getElementById("addNominal").value = "";
-            document.getElementById("addDokumen").value = "";
+            document.getElementById("addFileInput").value = "";
 
             document.getElementById("modalTambahKlaim").classList.remove("hidden");
         }
@@ -355,8 +377,23 @@
         async function submitNewClaim(e) {
             e.preventDefault();
             const btn = document.getElementById("btnSubmitAdd");
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Mengirim...`;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Mengupload & Mengirim...`;
             btn.disabled = true;
+
+            const fileInput = document.getElementById("addFileInput");
+            let fileData = "", fileName = "";
+
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                if (file.size > 5 * 1024 * 1024) {
+                    alert("Ukuran file terlalu besar! Maksimal 5 MB.");
+                    btn.innerHTML = `Kirim Berkas Klaim`;
+                    btn.disabled = false;
+                    return;
+                }
+                fileName = file.name;
+                fileData = await getBase64(file);
+            }
 
             const payload = {
                 action: "CREATE",
@@ -366,7 +403,8 @@
                 nominalKlaim: document.getElementById("addNominal").value,
                 tglKirimBerkas: document.getElementById("addTglKirim").value,
                 tglDiterimaClaimMD: document.getElementById("addTglMD").value,
-                uploadDokumen: document.getElementById("addDokumen").value
+                fileData: fileData,
+                fileName: fileName
             };
 
             try {
@@ -387,9 +425,7 @@
             }
         }
 
-        // =====================================
-        // LOGIKA VERIFIKASI ADMIN
-        // =====================================
+        // Form Handler Verifikasi Admin
         function filterByStatus(st) {
             document.getElementById("statusFilter").value = st;
             renderTable();
