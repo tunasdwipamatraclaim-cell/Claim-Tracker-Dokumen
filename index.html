@@ -40,7 +40,7 @@
 
     <div class="max-w-[96%] mx-auto py-6 space-y-6">
 
-        <!-- Stat Cards Ringkasan -->
+        <!-- Stat Cards Ringkasan (Dashboard Utama) -->
         <div class="grid grid-cols-2 md:grid-cols-6 gap-3">
             <div onclick="filterByStatus('ALL')" class="cursor-pointer bg-white p-3 rounded-xl shadow-sm border border-slate-200 hover:border-indigo-500 transition">
                 <p class="text-[10px] font-bold text-slate-400 uppercase">Total Klaim</p>
@@ -182,7 +182,7 @@
         </div>
     </div>
 
-    <!-- MODAL FORM VERIFIKASI -->
+    <!-- MODAL FORM VERIFIKASI ADMIN -->
     <div id="modalVerifikasi" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
             <div class="flex justify-between items-center border-b pb-2">
@@ -356,7 +356,7 @@
 
                     let docLink = (row.UploadDokumen && row.UploadDokumen.startsWith("http")) 
                         ? `<a href="${row.UploadDokumen}" target="_blank" class="text-indigo-600 hover:underline font-semibold"><i class="fa-solid fa-file-lines mr-1"></i>Lihat Dokumen</a>` 
-                        : '-';
+                        : (row.UploadDokumen && row.UploadDokumen !== "-" ? row.UploadDokumen : '-');
 
                     let btnAksi = isAdmin 
                         ? `<button onclick="openModal('${row.NoKlaim}')" class="text-indigo-600 hover:text-indigo-800 font-semibold text-xs bg-indigo-50 px-2.5 py-1 rounded border border-indigo-200 hover:bg-indigo-100"><i class="fa-solid fa-pen-to-square"></i> Edit</button>`
@@ -411,6 +411,7 @@
             document.getElementById("modalTambahKlaim").classList.add("hidden");
         }
 
+        // WORKFLOW 1: Input dari Dashboard langsung terupdate di dashboard & dikirim ke Sheet
         async function submitNewClaim(e) {
             e.preventDefault();
             const btn = document.getElementById("btnSubmitAdd");
@@ -440,6 +441,28 @@
             const tglKirimVal = document.getElementById("addTglKirim").value;
             const tglMDVal = document.getElementById("addTglMD").value;
 
+            // Masukkan langsung ke dashboard secara instan (Real-time update)
+            const newRow = {
+                NoKlaim: noKlaimVal,
+                NamaDealer: dealerVal,
+                JenisProgram: programVal,
+                NominalKlaim: nominalVal,
+                TglKirimBerkas: tglKirimVal,
+                TglDiterimaClaimMD: tglMDVal,
+                UploadDokumen: fileName ? fileName : "-",
+                TglDiterimaPajak: "-",
+                TglDiterimaFinance: "-",
+                StatusTerakhir: "Processing",
+                CatatanVerifikator: "-"
+            };
+
+            klaimData.push(newRow);
+            updateDashboardSummary(klaimData);
+            renderTable();
+            closeModalTambah();
+            alert("Klaim Berhasil Diajukan dan Ditampilkan di Dashboard!");
+
+            // Kirim ke Google Sheets di latar belakang
             const formData = new FormData();
             formData.append("action", "CREATE");
             formData.append("noKlaim", noKlaimVal);
@@ -452,45 +475,12 @@
             formData.append("fileName", fileName);
             formData.append("mimeType", mimeType);
 
-            try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: "POST",
-                    body: formData
-                });
-                
-                const resultText = await response.text(); 
-                
-                // --- WORKFLOW 1: Langsung masukkan data baru ke memori lokal browser & render seketika ---
-                const newRow = {
-                    NoKlaim: noKlaimVal,
-                    NamaDealer: dealerVal,
-                    JenisProgram: programVal,
-                    NominalKlaim: nominalVal,
-                    TglKirimBerkas: tglKirimVal,
-                    TglDiterimaClaimMD: tglMDVal,
-                    UploadDokumen: fileName ? "(File Terupload)" : "-",
-                    TglDiterimaPajak: "-",
-                    TglDiterimaFinance: "-",
-                    StatusTerakhir: "Processing",
-                    CatatanVerifikator: "-"
-                };
+            fetch(SCRIPT_URL, { method: "POST", body: formData })
+                .then(() => fetchDataFromSheets())
+                .catch(err => console.error("Sync background error:", err));
 
-                klaimData.push(newRow);
-                updateDashboardSummary(klaimData);
-                renderTable();
-
-                closeModalTambah();
-                alert("Pengajuan Klaim Berkas " + noKlaimVal + " Berhasil Disimpan ke Dashboard & Sheet!");
-                
-                // Background sync untuk mengambil URL file dokumen asli dari Drive via Sheet
-                fetchDataFromSheets();
-
-            } catch (err) {
-                alert("Gagal mengirim klaim baru. " + err);
-            } finally {
-                btn.innerHTML = `Kirim Berkas Klaim`;
-                btn.disabled = false;
-            }
+            btn.innerHTML = `Kirim Berkas Klaim`;
+            btn.disabled = false;
         }
 
         function filterByStatus(st) {
@@ -523,6 +513,7 @@
             document.getElementById("groupFinDate").style.display = st === "Diterima Finance" ? "block" : "none";
         }
 
+        // WORKFLOW 2 & 3: Admin ubah status di Dashboard, dashboard update seketika & Sheet mengikuti
         async function saveVerification(e) {
             e.preventDefault();
             
@@ -536,6 +527,21 @@
             const newTglFinance = (newStatus === "Diterima Finance") ? document.getElementById("modalFinDate").value : "-";
             const newCatatan = document.getElementById("modalCatatan").value;
 
+            // Update langsung tampilan dashboard (client-side) secara real-time
+            const targetRow = klaimData.find(item => item.NoKlaim.toString() === noKlaimTarget.toString());
+            if (targetRow) {
+                targetRow.StatusTerakhir = newStatus;
+                targetRow.TglDiterimaPajak = newTglPajak;
+                targetRow.TglDiterimaFinance = newTglFinance;
+                targetRow.CatatanVerifikator = newCatatan;
+            }
+
+            updateDashboardSummary(klaimData);
+            renderTable();
+            closeModal();
+            alert("Status Berhasil Diperbarui di Dashboard!");
+
+            // Kirim pembaruan ke Google Sheets di latar belakang
             const formData = new FormData();
             formData.append("action", "UPDATE");
             formData.append("noKlaim", noKlaimTarget);
@@ -544,31 +550,11 @@
             formData.append("tglFinance", newTglFinance !== "-" ? newTglFinance : "");
             formData.append("catatan", newCatatan);
 
-            try {
-                // --- WORKFLOW 2 & 3: Update langsung data di memori dashboard tanpa nunggu refresh sheet ---
-                const targetRow = klaimData.find(item => item.NoKlaim.toString() === noKlaimTarget.toString());
-                if (targetRow) {
-                    targetRow.StatusTerakhir = newStatus;
-                    targetRow.TglDiterimaPajak = newTglPajak;
-                    targetRow.TglDiterimaFinance = newTglFinance;
-                    targetRow.CatatanVerifikator = newCatatan;
-                }
+            fetch(SCRIPT_URL, { method: "POST", body: formData })
+                .catch(err => console.error("Sync update error:", err));
 
-                updateDashboardSummary(klaimData);
-                renderTable();
-
-                // Kirim perubahan di latar belakang ke Google Sheets
-                fetch(SCRIPT_URL, { method: "POST", body: formData }).catch(err => console.error(err));
-
-                closeModal();
-                alert("Data Klaim " + noKlaimTarget + " berhasil di-update di Dashboard & Sheet!");
-
-            } catch (err) {
-                alert("Gagal memperbarui data.");
-            } finally {
-                btnSubmit.innerHTML = `Simpan Perubahan`;
-                btnSubmit.disabled = false;
-            }
+            btnSubmit.innerHTML = `Simpan Perubahan`;
+            btnSubmit.disabled = false;
         }
 
         function exportToExcel() {
