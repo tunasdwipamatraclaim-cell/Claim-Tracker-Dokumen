@@ -4,14 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Verifikasi Klaim Dealer</title>
-    <!-- Tailwind CSS, SheetJS & FontAwesome -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body class="bg-slate-100 font-sans text-slate-800">
 
-    <!-- Top Header Bar -->
     <header class="bg-[#1B365D] text-white shadow-lg py-4 px-6 flex flex-col md:flex-row justify-between items-center gap-3">
         <div class="flex items-center space-x-3">
             <i class="fa-solid fa-file-signature text-2xl text-teal-400"></i>
@@ -21,11 +19,9 @@
             </div>
         </div>
         <div class="flex flex-wrap items-center gap-2">
-            <!-- Tombol Kirim Klaim Baru untuk Dealer -->
             <button onclick="openModalTambahKlaim()" class="bg-teal-500 hover:bg-teal-600 text-white px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center shadow">
                 <i class="fa-solid fa-paper-plane mr-1.5"></i> + Kirim Klaim Baru
             </button>
-            <!-- Toggle Admin Mode -->
             <button id="btnLoginAdmin" onclick="toggleAdminLogin()" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center shadow">
                 <i class="fa-solid fa-lock mr-1.5"></i> Login Admin
             </button>
@@ -36,8 +32,6 @@
     </header>
 
     <div class="max-w-[96%] mx-auto py-6 space-y-6">
-
-        <!-- Stat Cards Ringkasan -->
         <div class="grid grid-cols-2 md:grid-cols-6 gap-3">
             <div onclick="filterByStatus('ALL')" class="cursor-pointer bg-white p-3 rounded-xl shadow-sm border border-slate-200 hover:border-indigo-500 transition">
                 <p class="text-[10px] font-bold text-slate-400 uppercase">Total Klaim</p>
@@ -65,7 +59,6 @@
             </div>
         </div>
 
-        <!-- Filter & Search Bar -->
         <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="relative w-full md:w-96">
                 <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400"></i>
@@ -84,7 +77,6 @@
             </div>
         </div>
 
-        <!-- Main Data Table -->
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
             <table class="w-full text-left text-xs border-collapse min-w-[1200px]">
                 <thead>
@@ -110,7 +102,7 @@
         </div>
     </div>
 
-    <!-- 1. MODAL FORM TAMBAH KLAIM (USER/DEALER) -->
+    <!-- MODAL FORM TAMBAH KLAIM -->
     <div id="modalTambahKlaim" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-lg p-6 space-y-4">
             <div class="flex justify-between items-center border-b pb-2">
@@ -160,9 +152,10 @@
                     </div>
                 </div>
 
+                <!-- Bagian Upload File (Sudah Diaktifkan) -->
                 <div>
                     <label class="block text-xs font-bold text-slate-600 mb-1">Upload Dokumen (Dalam Pengembangan)</label>
-                    <input type="file" id="addFileInput" disabled accept=".jpg,.jpeg,.png,.pdf" class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 border border-slate-300 rounded-lg">
+                    <input type="file" id="addFileInput" accept=".jpg,.jpeg,.png,.pdf" class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 border border-slate-300 rounded-lg cursor-pointer">
                 </div>
 
                 <div class="flex justify-end space-x-2 pt-3 border-t">
@@ -173,7 +166,7 @@
         </div>
     </div>
 
-    <!-- 2. MODAL FORM VERIFIKASI (ADMIN) -->
+    <!-- MODAL FORM VERIFIKASI (ADMIN) -->
     <div id="modalVerifikasi" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
             <div class="flex justify-between items-center border-b pb-2">
@@ -182,7 +175,6 @@
             </div>
             <form id="formVerifikasi" onsubmit="saveVerification(event)" class="space-y-3">
                 <input type="hidden" id="modalNoKlaim">
-                
                 <div>
                     <label class="block text-xs font-bold text-slate-600 mb-1">Status Verifikasi Baru</label>
                     <select id="modalStatus" onchange="toggleDateInputs()" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500">
@@ -193,22 +185,18 @@
                         <option value="Revisi">Revisi</option>
                     </select>
                 </div>
-
                 <div id="groupTaxDate">
                     <label class="block text-xs font-bold text-slate-600 mb-1">Tanggal Diterima Pajak</label>
                     <input type="date" id="modalTaxDate" class="w-full border border-slate-300 rounded-lg p-2 text-sm">
                 </div>
-
                 <div id="groupFinDate">
                     <label class="block text-xs font-bold text-slate-600 mb-1">Tanggal Diterima Finance</label>
                     <input type="date" id="modalFinDate" class="w-full border border-slate-300 rounded-lg p-2 text-sm">
                 </div>
-
                 <div>
                     <label class="block text-xs font-bold text-slate-600 mb-1">Catatan Verifikator</label>
                     <textarea id="modalCatatan" rows="3" placeholder="Tulis alasan jika Revisi atau catatan tambahan..." class="w-full border border-slate-300 rounded-lg p-2 text-sm"></textarea>
                 </div>
-
                 <div class="flex justify-end space-x-2 pt-3 border-t">
                     <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-200 text-slate-700 text-sm font-semibold rounded-lg hover:bg-slate-300">Batal</button>
                     <button type="submit" id="btnSubmit" class="px-4 py-2 bg-[#1B365D] text-white text-sm font-semibold rounded-lg hover:bg-indigo-900">Simpan Perubahan</button>
@@ -217,30 +205,26 @@
         </div>
     </div>
 
-    <!-- SCRIPT TERHUBUNG KE GOOGLE SHEETS -->
     <script>
+        // API URL Google Apps Script yang Anda berikan
         const API_URL = "https://script.google.com/macros/s/AKfycbxFbC2sck1geSx56pjmsNGiHnsw2g_fT90sHmrPxBw-fuIfRBc3gCvWNyLjXO753hAf-A/exec";
         
         let klaimData = [];
         let isAdmin = false;
 
-        // FUNGSI MEMBACA DATA DARI GOOGLE SHEETS (GET)
         async function loadData() {
             const tbody = document.getElementById("tableBody");
             tbody.innerHTML = `<tr><td colspan="12" class="text-center py-6 text-slate-500 font-semibold"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Sedang memuat data dari database...</td></tr>`;
-            
             try {
                 const response = await fetch(API_URL);
                 const data = await response.json();
                 
-                // Menerjemahkan format dari Google Sheets agar sesuai persis dengan variabel rendering website Anda
                 klaimData = data.map(row => {
                     const formatTanggal = (tgl) => {
                         if(!tgl) return "";
                         const d = new Date(tgl);
                         return isNaN(d) ? tgl : d.toISOString().split('T')[0];
                     };
-
                     return {
                         NoKlaim: row['No Klaim'] || "",
                         NamaDealer: row['Nama Dealer'] || "",
@@ -258,11 +242,10 @@
                 renderTable();
             } catch (error) {
                 console.error("Error fetching data:", error);
-                tbody.innerHTML = `<tr><td colspan="12" class="text-center py-6 text-rose-500 font-semibold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Gagal memuat data dari Google Sheets. Periksa koneksi internet Anda.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="12" class="text-center py-6 text-rose-500 font-semibold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Gagal memuat data dari Google Sheets.</td></tr>`;
             }
         }
 
-        // TIDAK ADA PERUBAHAN PADA TAMPILAN ADMIN
         function toggleAdminLogin() {
             if(!isAdmin) {
                 const password = prompt("Masukkan Password Admin Verifikator:");
@@ -272,7 +255,6 @@
                     document.getElementById("roleBadge").className = "bg-emerald-600 text-white px-2 py-0.5 rounded text-[10px] font-bold";
                     document.getElementById("btnLoginAdmin").innerHTML = `<i class="fa-solid fa-right-from-bracket mr-1.5"></i> Logout Admin`;
                     document.getElementById("btnLoginAdmin").className = "bg-rose-600 hover:bg-rose-700 text-white px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center shadow";
-                    alert("Berhasil Login sebagai Admin Verifikator!");
                 } else if(password !== null) {
                     alert("Password salah!");
                 }
@@ -286,7 +268,6 @@
             renderTable();
         }
 
-        // RENDER TAMPILAN TABEL TETAP SAMA PERSIS
         function renderTable() {
             const tbody = document.getElementById("tableBody");
             const search = document.getElementById("searchInput").value.toLowerCase();
@@ -323,8 +304,8 @@
                     if(st === "Revisi") badgeColor = "bg-rose-200 text-rose-900 border-rose-300";
 
                     let docLink = '-';
-                    if (row.UploadDokumen) {
-                        docLink = `<a href="${row.UploadDokumen}" target="_blank" class="text-indigo-600 hover:underline font-semibold"><i class="fa-solid fa-file-lines mr-1"></i>Lihat Dokumen</a>`;
+                    if (row.UploadDokumen && row.UploadDokumen.startsWith("http")) {
+                        docLink = `<a href="${row.UploadDokumen}" target="_blank" class="text-indigo-600 hover:underline font-semibold"><i class="fa-solid fa-file-lines mr-1"></i>Lihat</a>`;
                     }
 
                     let btnAksi = isAdmin 
@@ -358,7 +339,6 @@
             document.getElementById("stat-revisi").innerText = cRev;
         }
 
-        // FUNGSI MEMBUKA MODAL KLAIM BARU TETAP SAMA
         function openModalTambahKlaim() {
             const today = new Date().toISOString().split('T')[0];
             const nextNum = klaimData.length + 1;
@@ -380,14 +360,12 @@
             document.getElementById("modalTambahKlaim").classList.add("hidden");
         }
 
-        // FUNGSI MENGIRIM KLAIM KE GOOGLE SHEETS (POST)
         async function submitNewClaim(e) {
             e.preventDefault();
             const btn = document.getElementById("btnSubmitAdd");
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Menyimpan ke Database...`;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Sedang Mengunggah Dokumen...`;
             btn.disabled = true;
 
-            // Membuat FormData khusus yang cocok persis dengan Header Google Sheets Anda
             const form = new FormData();
             form.append("No Klaim", document.getElementById("addNoKlaim").value);
             form.append("Nama Dealer", document.getElementById("addDealer").value);
@@ -395,11 +373,36 @@
             form.append("Nominal Klaim", document.getElementById("addNominal").value);
             form.append("Tgl Kirim", document.getElementById("addTglKirim").value);
             form.append("Tgl Diterima MD", document.getElementById("addTglMD").value);
-            form.append("Link Dokumen", "");
-            form.append("Tgl Diterima Pajak", "");
-            form.append("Tgl Diterima Finance", "");
             form.append("Status", "Processing");
-            form.append("Catatan", "");
+
+            const fileInput = document.getElementById("addFileInput");
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                if (file.size > 5 * 1024 * 1024) { // Batas maksimal 5MB
+                    alert("Ukuran dokumen terlalu besar! Maksimal 5 MB.");
+                    btn.innerHTML = `Kirim Berkas Klaim`;
+                    btn.disabled = false;
+                    return;
+                }
+                
+                try {
+                    const base64 = await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.readAsDataURL(file);
+                        reader.onload = () => resolve(reader.result.split(',')[1]);
+                        reader.onerror = error => reject(error);
+                    });
+                    
+                    form.append("fileData", base64);
+                    form.append("fileName", file.name);
+                    form.append("mimeType", file.type);
+                } catch (error) {
+                    alert("Gagal membaca file dokumen.");
+                    btn.innerHTML = `Kirim Berkas Klaim`;
+                    btn.disabled = false;
+                    return;
+                }
+            }
 
             try {
                 const response = await fetch(API_URL, {
@@ -410,22 +413,21 @@
                 const result = await response.json();
                 
                 if (result.result === 'success') {
-                    alert("Pengajuan Klaim Berkas " + form.get("No Klaim") + " Berhasil Disimpan ke Google Sheets!");
+                    alert("Pengajuan Klaim Berkas " + form.get("No Klaim") + " Berhasil Dikirim!");
                     closeModalTambah();
-                    loadData(); // Load ulang data tabel dari sheet
+                    loadData(); 
                 } else {
                     alert("Gagal menyimpan data ke database.");
                 }
             } catch (error) {
                 console.error("Error:", error);
-                alert("Terjadi kesalahan koneksi internet saat menyimpan data.");
+                alert("Terjadi kesalahan koneksi saat mengunggah.");
             } finally {
                 btn.innerHTML = `Kirim Berkas Klaim`;
                 btn.disabled = false;
             }
         }
 
-        // FILTER, MODAL EDIT & VERIFIKASI
         function filterByStatus(st) {
             document.getElementById("statusFilter").value = st;
             renderTable();
@@ -458,28 +460,10 @@
 
         function saveVerification(e) {
             e.preventDefault();
-            // Catatan: Google Apps Script default (doPost) hanya bisa menambah baris baru, bukan Update (Edit).
-            // Fitur edit ini membutuhkan penyesuaian tambahan di Google Apps Script-nya nanti.
-            alert("Perhatian: Fitur EDIT/UPDATE Status belum terhubung ke Google Sheets (Masih menggunakan memori sementara browser).");
-            
-            const noKlaim = document.getElementById("modalNoKlaim").value;
-            const newStatus = document.getElementById("modalStatus").value;
-            const tglPajak = (newStatus === "Diterima Tim Tax" || newStatus === "Diterima Finance") ? document.getElementById("modalTaxDate").value : "";
-            const tglFinance = (newStatus === "Diterima Finance") ? document.getElementById("modalFinDate").value : "";
-            const catatan = document.getElementById("modalCatatan").value;
-
-            const row = klaimData.find(item => item.NoKlaim.toString() === noKlaim.toString());
-            if (row) {
-                row.StatusTerakhir = newStatus;
-                row.TglDiterimaPajak = tglPajak;
-                row.TglDiterimaFinance = tglFinance;
-                row.CatatanVerifikator = catatan;
-                closeModal();
-                renderTable();
-            }
+            alert("Perhatian: Fitur EDIT/UPDATE Status belum terhubung ke Google Sheets.");
+            closeModal();
         }
 
-        // FUNGSI EXPORT EXCEL TETAP SAMA PERSIS
         function exportToExcel() {
             if(klaimData.length === 0) {
                 alert("Tidak ada data untuk di-export!");
@@ -493,7 +477,7 @@
                 "Nominal Klaim (Rp)": parseFloat(row.NominalKlaim) || 0,
                 "Tgl Kirim Berkas": row.TglKirimBerkas || "",
                 "Tgl Diterima Claim MD": row.TglDiterimaClaimMD || "",
-                "Link / Status Dokumen": row.UploadDokumen ? "Ada Dokumen" : "Tidak Ada",
+                "Link / Status Dokumen": row.UploadDokumen ? row.UploadDokumen : "Tidak Ada",
                 "Tgl Diterima Pajak": row.TglDiterimaPajak || "",
                 "Tgl Diterima Finance": row.TglDiterimaFinance || "",
                 "Status Terakhir": row.StatusTerakhir || "Processing",
@@ -528,7 +512,6 @@
             XLSX.writeFile(wb, "Report_Lengkap_Klaim_Dealer.xlsx");
         }
 
-        // Panggil data dari Sheet saat website dibuka
         document.addEventListener("DOMContentLoaded", loadData);
     </script>
 </body>
